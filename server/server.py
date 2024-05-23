@@ -13,6 +13,14 @@ class Server:
         self.clients = dict()
         self.CLOSE_MSG = 'CLOSE_CONNECTION'
 
+    def status(self) -> None:
+        """Show current server status"""
+
+        if self.isActive:
+            print(f"Server is already working on port {self.port}")
+        else:
+            print("Server is not working at the moment")
+
     def start(self) -> None:
         """Create a server socket and accept connections"""
 
