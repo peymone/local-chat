@@ -1,3 +1,4 @@
+from threading import Thread
 from sys import argv
 import socket
 
@@ -12,7 +13,7 @@ class Server:
         self.clients = dict()
         self.CLOSE_MSG = 'CLOSE_CONNECTION'
 
-    def start(self):
+    def start(self) -> None:
         """Create a server socket and accept connections"""
 
         self.isActive = True
@@ -38,12 +39,17 @@ class Server:
         self.isActive = False  # Stop accepting connections
 
         # Close active connections
-        for client_data in self.clients.values():
-            client_data[0].send(self.CLOSE_MSG.encode())  # Send close message
-            client_data[0].close()  # Close client socket
+        if len(self.clients) > 0:
+            for client_data in self.clients.values():
+                client_data[0].send(self.CLOSE_MSG.encode())
+                client_data[0].close()  # Close client socket
 
-        self.clients = dict()  # Clear clients data
+            self.clients = dict()  # Clear clients data
+
         self.server_socket.close()  # Close server socket
+
+    def receive(self, socket, nickname: str) -> None:
+        """Processing messages from the client"""
 
 
 if __name__ == '__main__':
