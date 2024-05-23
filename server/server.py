@@ -39,9 +39,8 @@ class Server:
                 self.clients[nickname] = (client_socket, client_address)
 
                 # Start receiving messages from client
-                receive_thread = Thread(
-                    target=self.receive, args=(client_socket, nickname))
-                receive_thread.start()
+                Thread(target=self.receive, args=(
+                    client_socket, nickname)).start()
 
             except OSError:  # Raise when server is stopped but still accepting connections
                 pass
@@ -75,6 +74,17 @@ class Server:
 
             except ConnectionAbortedError:  # Raise when server is stopped but still receiving messages
                 pass
+
+    def send(self, nickname: str, message: str) -> None:
+        """Send message to specific client"""
+
+        if self.isActive:
+            if nickname in self.clients:
+                self.clients[nickname][0].send(message.encode())
+            else:
+                print("A user with this nickname is not connected")
+        else:
+            print("Server is not working at the moment")
 
 
 if __name__ == '__main__':
