@@ -80,9 +80,22 @@ class Server:
 
         if self.isActive:
             if nickname in self.clients:
-                self.clients[nickname][0].send(message.encode())
+                self.clients[nickname][0].send(
+                    f"{nickname}: {message}".encode())
             else:
                 print("A user with this nickname is not connected")
+        else:
+            print("Server is not working at the moment")
+
+    def broadcast(self, nickname: str, message: str) -> None:
+        """Send message to all connected clients"""
+
+        if self.isActive:
+            for nick in self.clients:
+                if nick == nickname:
+                    continue
+                else:
+                    self.send(nick, message)
         else:
             print("Server is not working at the moment")
 
