@@ -68,7 +68,7 @@ class Server:
                 message = socket.recv(1024).decode()
 
                 if message == self.CLOSE_MSG:  # Close connection if CLOSE_MSG received
-                    pass
+                    self.close_connection(nickname)
                 else:  # Show message and broadcat to other clients
                     print(f"{nickname}: {message}")
 
@@ -83,7 +83,7 @@ class Server:
                 self.clients[nickname][0].send(
                     f"{nickname}: {message}".encode())
             else:
-                print("A user with this nickname is not connected")
+                print(f"Client with name {nickname} is not connected")
         else:
             print("Server is not working at the moment")
 
@@ -96,6 +96,18 @@ class Server:
                     continue
                 else:
                     self.send(nick, message)
+        else:
+            print("Server is not working at the moment")
+
+    def close_connection(self, nickname: str) -> None:
+        """Close a connection to a specific user"""
+
+        if self.isActive:
+            if nickname in self.clients:
+                self.clients[nickname][0].close()
+                del self.clients[nickname]
+            else:
+                print(f"Client with name {nickname} is not connected")
         else:
             print("Server is not working at the moment")
 
