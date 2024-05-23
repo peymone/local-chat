@@ -30,6 +30,11 @@ class Server:
                 nickname = client_socket.recv(1024).decode()
                 self.clients[nickname] = (client_socket, client_address)
 
+                # Start receiving messages from client
+                receive_thread = Thread(
+                    target=self.receive, args=(client_socket, nickname))
+                receive_thread.start()
+
             except OSError:  # Raise when server is stopped but still accepting connections
                 pass
 
@@ -50,6 +55,18 @@ class Server:
 
     def receive(self, socket, nickname: str) -> None:
         """Processing messages from the client"""
+
+        while nickname in self.clients:
+            try:
+                message = socket.recv(1024).decode()
+
+                if message == self.CLOSE_MSG:  # Close connection if CLOSE_MSG received
+                    pass
+                else:  # Show message and broadcat to other clients
+                    print(f"{nickname}: {message}")
+
+            except ConnectionAbortedError:  # Raise when server is stopped but still receiving messages
+                pass
 
 
 if __name__ == '__main__':
