@@ -1,4 +1,4 @@
-from .server import Server
+from server import Server
 
 from sys import argv
 from threading import Thread
@@ -96,7 +96,8 @@ class Console:
                             pass
 
         except KeyboardInterrupt:
-            server.stop()
+            if server.isActive:
+                server.stop()
             self.__command = 'exit'
 
 
