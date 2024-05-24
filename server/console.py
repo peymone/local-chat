@@ -96,9 +96,10 @@ class Console:
                             pass
 
         except KeyboardInterrupt:
-            if server.isActive:
-                server.stop()
             self.__command = 'exit'
+
+        if server.isActive:
+            server.stop()
 
 
 if __name__ == '__main__':

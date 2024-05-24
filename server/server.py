@@ -57,6 +57,7 @@ class Server:
         # Accept connections from clients while server is working
         while self.isActive:
             try:
+
                 # Accept client connection and receive first message
                 cSocket, cAddress = self.server_socket.accept()  # IO Blocking
                 ip, port = cAddress[0], cAddress[1]
@@ -77,22 +78,24 @@ class Server:
     def stop(self) -> None:
         """Close active connections and server socket"""
 
-        self.isActive = False  # Stop accepting connections
-
         # Close active connections
         if len(self.clients) > 0:
-            for nickname in self.clients:
-                self.close_connection(nickname, self.CLOSE_MSG)
+            for nick in self.clients.copy():
+                self.close_connection(nickname=nick, reason=self.CLOSE_MSG)
 
         # Fill txt with currently banned clients and close server socket
+        self.isActive = False
         self.__createBan_txt()
         self.server_socket.close()
+
         print("Server was stopped")
 
     def __receive(self, cSocket: socket.socket, nickname: str) -> None:
         """Processing messages from the client"""
 
         client_ip = self.clients[nickname][1]
+
+        print("RECV")
 
         # Receive messages from client while server client is not disconnected or banned
         while nickname in self.clients and self.__isBanned(client_ip) != True:
@@ -105,8 +108,14 @@ class Server:
                     self.broadcast(message, nickname)
                     print(f"{nickname}: {message}")
 
-            except ConnectionAbortedError:  # Raise when server is stopped but still receiving messages
+            except ConnectionAbortedError:  # Raise when client socket closed by server
+                print("ABORT BY SERVER")
                 pass
+
+            except ConnectionResetError:  # Raise when client socket closed by client
+                self.close_connection(nickname)
+
+        print("END RECV")
 
     @checkServer_isWorking
     def send(self, nickname: str, message: str, sender: str = 'admin') -> None:
