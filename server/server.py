@@ -213,11 +213,6 @@ class Server:
         else:
             return False
 
-    def __getBan_time(self, ip: str) -> str:
-        """Get time to unban for specified IP"""
-
-        return self.banned[ip].strftime(self.tFormat)
-
     def __checkBan_txt(self) -> dict:
         """Fill banned dictionary"""
 
