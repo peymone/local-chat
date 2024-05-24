@@ -160,6 +160,16 @@ class Server:
             print(f"Client with name {nickname} is not connected")
 
     @checkServer_isWorking
+    def show_connections(self) -> None:
+        """Show current active connections"""
+
+        if len(self.clients) > 0:
+            for nickname, data in self.clients.items():
+                print(f"{nickname} - IP {data[1]}, PORT {data[2]}")
+        else:
+            print("Server have no connected clients at the moment")
+
+    @checkServer_isWorking
     def ban(self, nickname: str, duration: int = -1) -> None:
         """Ban a specific client for n minutes or forever"""
 

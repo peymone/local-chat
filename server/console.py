@@ -53,7 +53,7 @@ class Console:
                     case 'status': server.status()
                     case 'start': Thread(target=server.start).start()
                     case 'stop': server.stop()
-                    case 'clients': server.clients()  # Not implemented
+                    case 'clients': server.show_connections()
                     case 'disconnect':
                         if args is None:
                             print("Nickname can not be empty")
