@@ -1,6 +1,5 @@
 from datetime import datetime, timedelta
 from threading import Thread
-from sys import argv
 import socket
 
 
@@ -85,7 +84,7 @@ class Server:
                 if message == self.CLOSE_MSG:
                     self.close_connection(nickname)
                 else:
-                    self.__broadcast(nickname, message)
+                    self.broadcast(nickname, message)
                     print(f"{nickname}: {message}")
 
             except ConnectionAbortedError:  # Raise when server is stopped but still receiving messages
@@ -104,7 +103,7 @@ class Server:
         else:
             print("Server is not working at the moment")
 
-    def __broadcast(self, sender: str, message: str) -> None:
+    def broadcast(self, message: str, sender: str = 'admin') -> None:
         """Send message to all connected clients"""
 
         for nickname in self.clients:
@@ -226,12 +225,3 @@ class Server:
                 for ip, unban in self.banned.items():
                     unban_date = unban.strftime(self.tFormat)
                     file.write(f"{ip}:{unban_date}\n")
-
-
-if __name__ == '__main__':
-
-    # Set server port manually or use 6061 by default
-    if len(argv) > 1:
-        server = Server(port=int(argv[1]))
-    else:
-        server = Server(port=6061)
