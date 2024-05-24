@@ -64,7 +64,7 @@ class Server:
 
                 # Check if client was banned
                 if self.__isBanned(ip):
-                    self.close_connection(nick, self.BANNED_MSG)
+                    cSocket.close()
                 else:
                     # Save client data and start receiving messages
                     self.clients[nick] = cSocket, ip, port
@@ -129,19 +129,18 @@ class Server:
                 self.send(nickname, message, sender)
 
     @checkServer_isWorking
-    def close_connection(self, nickname: str, reason: str = None) -> None:
+    def close_connection(self, nickname: str, reason: str = None, unban: str = None) -> None:
         """Close a connection to a specific client"""
 
         if nickname in self.clients:
             client_socket: socket.socket = self.clients[nickname][0]
-            client_ip: str = self.clients[nickname][1]
 
             match reason:
                 case self.CLOSE_MSG:
                     client_socket.send(reason.encode())
                 case self.BANNED_MSG:
                     client_socket.send(reason.encode())
-                    client_socket.send(self.__getBan_time(client_ip))
+                    client_socket.send(unban.encode())
                 case _: pass
 
             client_socket.close()
@@ -163,11 +162,13 @@ class Server:
         else:
             unban_date = datetime.now() + timedelta(minutes=duration)
 
+        unban_date_str = unban_date.strftime(self.tFormat)
+
         # Ban client by IP with nickname
         if nickname in self.clients:
+            self.close_connection(nickname, self.BANNED_MSG, unban_date_str)
             self.banned[client_ip] = unban_date
-            self.close_connection(nickname, self.BANNED_MSG)
-            print(f"{nickname} was banned until {unban_date.strftime(self.tFormat)}")
+            print(f"{nickname} was banned until {unban_date_str}")
         else:
             print(f"Client with name {nickname} is not connected")
 
