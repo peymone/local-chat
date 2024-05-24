@@ -59,17 +59,20 @@ class Server:
     def stop(self) -> None:
         """Close active connections and server socket"""
 
-        self.isActive = False  # Stop accepting connections
+        if self.isActive:
+            self.isActive = False  # Stop accepting connections
 
-        # Close active connections
-        if len(self.clients) > 0:
-            for nickname in self.clients:
-                self.close_connection(nickname, self.CLOSE_MSG)
+            # Close active connections
+            if len(self.clients) > 0:
+                for nickname in self.clients:
+                    self.close_connection(nickname, self.CLOSE_MSG)
 
-        # Fill txt with currently banned clients and close server socket
-        self.__createBan_txt()
-        self.server_socket.close()
-        print("Server was stopped")
+            # Fill txt with currently banned clients and close server socket
+            self.__createBan_txt()
+            self.server_socket.close()
+            print("Server was stopped")
+        else:
+            print("Server is not working at the moment")
 
     def __receive(self, socket: socket.socket, nickname: str) -> None:
         """Processing messages from the client"""
