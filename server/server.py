@@ -89,7 +89,7 @@ class Server:
         self.server_socket.close()
         print("Server was stopped")
 
-    def __receive(self, socket: socket.socket, nickname: str) -> None:
+    def __receive(self, cSocket: socket.socket, nickname: str) -> None:
         """Processing messages from the client"""
 
         client_ip = self.clients[nickname][1]
@@ -97,12 +97,12 @@ class Server:
         # Receive messages from client while server client is not disconnected or banned
         while nickname in self.clients and self.__isBanned(client_ip) != True:
             try:
-                message = socket.recv(1024).decode()
+                message = cSocket.recv(1024).decode()
 
                 if message == self.CLOSE_MSG:
                     self.close_connection(nickname)
                 else:
-                    self.broadcast(nickname, message)
+                    self.broadcast(message, nickname)
                     print(f"{nickname}: {message}")
 
             except ConnectionAbortedError:  # Raise when server is stopped but still receiving messages
