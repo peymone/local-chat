@@ -90,7 +90,7 @@ class Console:
                             server.unban(args[0])
                     case 'unbanall': server.unban_all()
                     case 'nickname':  # Not implemented
-                        if len(args) < 2:
+                        if args is not None and len(args) < 2:
                             print("Previous nick and new nick can not be empty")
                         else:
                             pass

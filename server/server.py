@@ -19,6 +19,14 @@ class Server:
         # Fill dictionary with current banned clients
         self.__checkBan_txt()
 
+    def checkServer_activity(func):
+        def wrapper(*args, **kwargs):
+            if args[0].isActive:
+                func(*args, **kwargs)
+            else:
+                print("Server is not working at the moment")
+        return wrapper
+
     def status(self) -> None:
         """Show current server status"""
 
@@ -27,6 +35,7 @@ class Server:
         else:
             print("Server is not working at the moment")
 
+    @checkServer_activity
     def start(self) -> None:
         """Create a server socket and accept connections"""
 
@@ -56,23 +65,21 @@ class Server:
             except OSError:  # Raise when server is stopped but still accepting connections
                 pass
 
+    @checkServer_activity
     def stop(self) -> None:
         """Close active connections and server socket"""
 
-        if self.isActive:
-            self.isActive = False  # Stop accepting connections
+        self.isActive = False  # Stop accepting connections
 
-            # Close active connections
-            if len(self.clients) > 0:
-                for nickname in self.clients:
-                    self.close_connection(nickname, self.CLOSE_MSG)
+        # Close active connections
+        if len(self.clients) > 0:
+            for nickname in self.clients:
+                self.close_connection(nickname, self.CLOSE_MSG)
 
-            # Fill txt with currently banned clients and close server socket
-            self.__createBan_txt()
-            self.server_socket.close()
-            print("Server was stopped")
-        else:
-            print("Server is not working at the moment")
+        # Fill txt with currently banned clients and close server socket
+        self.__createBan_txt()
+        self.server_socket.close()
+        print("Server was stopped")
 
     def __receive(self, socket: socket.socket, nickname: str) -> None:
         """Processing messages from the client"""
@@ -93,56 +100,50 @@ class Server:
             except ConnectionAbortedError:  # Raise when server is stopped but still receiving messages
                 pass
 
+    @checkServer_activity
     def send(self, nickname: str, message: str, sender: str = 'admin') -> None:
         """Send message to a specific client"""
 
-        if self.isActive:
-            if nickname in self.clients:
-                client_socket = self.clients[nickname][0]
-                client_socket.send(f"{sender}: {message}".encode())
-            else:
-                print(f"Client with name {nickname} is not connected")
+        if nickname in self.clients:
+            client_socket = self.clients[nickname][0]
+            client_socket.send(f"{sender}: {message}".encode())
         else:
-            print("Server is not working at the moment")
+            print(f"Client with name {nickname} is not connected")
 
+    @checkServer_activity
     def broadcast(self, message: str, sender: str = 'admin') -> None:
         """Send message to all connected clients"""
 
-        if self.isActive:
-            for nickname in self.clients:
-                if nickname == sender:
-                    continue
-                else:
-                    self.send(nickname, message, sender)
-        else:
-            print("Server is not working at the moment")
+        for nickname in self.clients:
+            if nickname == sender:
+                continue
+            else:
+                self.send(nickname, message, sender)
 
+    @checkServer_activity
     def close_connection(self, nickname: str, reason: str = None) -> None:
         """Close a connection to a specific client"""
 
-        if self.isActive:
-            if nickname in self.clients:
+        if nickname in self.clients:
+            client_socket: socket.socket = self.clients[nickname][0]
+            client_ip: str = self.clients[nickname][1]
 
-                client_socket: socket.socket = self.clients[nickname][0]
-                client_ip: str = self.clients[nickname][1]
+            match reason:
+                case self.CLOSE_MSG:
+                    client_socket.send(reason.encode())
+                case self.BANNED_MSG:
+                    client_socket.send(reason.encode())
+                    client_socket.send(self.__getBan_time(client_ip))
+                case _: pass
 
-                match reason:
-                    case self.CLOSE_MSG:
-                        client_socket.send(reason.encode())
-                    case self.BANNED_MSG:
-                        client_socket.send(reason.encode())
-                        client_socket.send(self.__getBan_time(client_ip))
-                    case _: pass
+            client_socket.close()
+            del self.clients[nickname]
+            print(f"Client {nickname} was disconnected")
 
-                client_socket.close()
-                del self.clients[nickname]
-                print(f"Client {nickname} was disconnected")
-
-            else:
-                print(f"Client with name {nickname} is not connected")
         else:
-            print("Server is not working at the moment")
+            print(f"Client with name {nickname} is not connected")
 
+    @checkServer_activity
     def ban(self, nickname: str, duration: int = -1) -> None:
         """Ban a specific client for n minutes or forever"""
 
@@ -162,6 +163,7 @@ class Server:
         else:
             print(f"Client with name {nickname} is not connected")
 
+    @checkServer_activity
     def unban(self, ip: str) -> None:
         """Unban a specific client by IP"""
 
@@ -171,12 +173,14 @@ class Server:
         else:
             print(f"Client with IP {ip} is not banned")
 
+    @checkServer_activity
     def unban_all(self) -> None:
         """Unban all clients"""
 
         self.banned = dict()
         print("All clients was seccesfully unbanned")
 
+    @checkServer_activity
     def show_banned(self) -> None:
         """Show all banned clients at the moment"""
 
