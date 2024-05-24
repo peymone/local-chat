@@ -96,10 +96,9 @@ class Server:
     def send(self, nickname: str, message: str, sender: str = 'admin') -> None:
         """Send message to a specific client"""
 
-        client_socket = self.clients[nickname][0]
-
         if self.isActive:
             if nickname in self.clients:
+                client_socket = self.clients[nickname][0]
                 client_socket.send(f"{sender}: {message}".encode())
             else:
                 print(f"Client with name {nickname} is not connected")
