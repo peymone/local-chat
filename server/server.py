@@ -108,11 +108,14 @@ class Server:
     def broadcast(self, message: str, sender: str = 'admin') -> None:
         """Send message to all connected clients"""
 
-        for nickname in self.clients:
-            if nickname == sender:
-                continue
-            else:
-                self.send(nickname, message, sender)
+        if self.isActive:
+            for nickname in self.clients:
+                if nickname == sender:
+                    continue
+                else:
+                    self.send(nickname, message, sender)
+        else:
+            print("Server is not working at the moment")
 
     def close_connection(self, nickname: str, reason: str = None) -> None:
         """Close a connection to a specific client"""
