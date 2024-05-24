@@ -19,12 +19,20 @@ class Server:
         # Fill dictionary with current banned clients
         self.__checkBan_txt()
 
-    def checkServer_activity(func):
+    def checkServer_isWorking(func):
         def wrapper(*args, **kwargs):
             if args[0].isActive:
                 func(*args, **kwargs)
             else:
                 print("Server is not working at the moment")
+        return wrapper
+
+    def checkServer_isNotWorking(func):
+        def wrapper(*args, **kwargs):
+            if args[0].isActive:
+                print(f"Server is already working on port {args[0].port}")
+            else:
+                func(*args, **kwargs)
         return wrapper
 
     def status(self) -> None:
@@ -35,6 +43,7 @@ class Server:
         else:
             print("Server is not working at the moment")
 
+    @checkServer_isNotWorking
     def start(self) -> None:
         """Create a server socket and accept connections"""
 
@@ -49,22 +58,22 @@ class Server:
         while self.isActive:
             try:
                 # Accept client connection and receive first message
-                socket, address = self.server_socket.accept()  # IO Blocking
-                ip, port = address[0], address[1]
-                nick = socket.recv(1024).decode()
+                cSocket, cAddress = self.server_socket.accept()  # IO Blocking
+                ip, port = cAddress[0], cAddress[1]
+                nick = cSocket.recv(1024).decode()
 
                 # Check if client was banned
                 if self.__isBanned(ip):
                     self.close_connection(nick, self.BANNED_MSG)
                 else:
                     # Save client data and start receiving messages
-                    self.clients[nick] = socket, ip, port
-                    Thread(target=self.__receive, args=(socket, nick)).start()
+                    self.clients[nick] = cSocket, ip, port
+                    Thread(target=self.__receive, args=(cSocket, nick)).start()
 
             except OSError:  # Raise when server is stopped but still accepting connections
                 pass
 
-    @checkServer_activity
+    @checkServer_isWorking
     def stop(self) -> None:
         """Close active connections and server socket"""
 
@@ -99,7 +108,7 @@ class Server:
             except ConnectionAbortedError:  # Raise when server is stopped but still receiving messages
                 pass
 
-    @checkServer_activity
+    @checkServer_isWorking
     def send(self, nickname: str, message: str, sender: str = 'admin') -> None:
         """Send message to a specific client"""
 
@@ -109,7 +118,7 @@ class Server:
         else:
             print(f"Client with name {nickname} is not connected")
 
-    @checkServer_activity
+    @checkServer_isWorking
     def broadcast(self, message: str, sender: str = 'admin') -> None:
         """Send message to all connected clients"""
 
@@ -119,7 +128,7 @@ class Server:
             else:
                 self.send(nickname, message, sender)
 
-    @checkServer_activity
+    @checkServer_isWorking
     def close_connection(self, nickname: str, reason: str = None) -> None:
         """Close a connection to a specific client"""
 
@@ -142,7 +151,7 @@ class Server:
         else:
             print(f"Client with name {nickname} is not connected")
 
-    @checkServer_activity
+    @checkServer_isWorking
     def ban(self, nickname: str, duration: int = -1) -> None:
         """Ban a specific client for n minutes or forever"""
 
@@ -162,7 +171,7 @@ class Server:
         else:
             print(f"Client with name {nickname} is not connected")
 
-    @checkServer_activity
+    @checkServer_isWorking
     def unban(self, ip: str) -> None:
         """Unban a specific client by IP"""
 
@@ -172,14 +181,14 @@ class Server:
         else:
             print(f"Client with IP {ip} is not banned")
 
-    @checkServer_activity
+    @checkServer_isWorking
     def unban_all(self) -> None:
         """Unban all clients"""
 
         self.banned = dict()
         print("All clients was seccesfully unbanned")
 
-    @checkServer_activity
+    @checkServer_isWorking
     def show_banned(self) -> None:
         """Show all banned clients at the moment"""
 
