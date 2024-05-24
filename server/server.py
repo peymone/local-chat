@@ -237,7 +237,8 @@ class Server:
         """Create txt with currently banned clients"""
 
         if len(self.banned) == 0:
-            pass
+            with open('banned.txt', 'w'):
+                pass
         else:
             with open('banned.txt', 'w') as file:
                 for ip, unban in self.banned.items():
