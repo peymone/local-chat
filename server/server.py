@@ -35,7 +35,6 @@ class Server:
         else:
             print("Server is not working at the moment")
 
-    @checkServer_activity
     def start(self) -> None:
         """Create a server socket and accept connections"""
 
