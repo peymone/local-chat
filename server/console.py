@@ -40,9 +40,9 @@ class Console:
                 self.__command = input("Enter command /> ")
 
                 # Parse command and arguments
-                if len(self.__command.split()) > 2:
-                    command = self.__command.split[0]
-                    args = self.__command.split[1:]
+                if len(self.__command.split()) >= 2:
+                    command = self.__command.split()[0]
+                    args = self.__command.split()[1:]
                 else:
                     command = self.__command
                     args = None
