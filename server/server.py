@@ -3,6 +3,7 @@ from threading import Thread
 import socket
 
 from interface import ui
+from logger import logger
 
 
 class Server:
@@ -58,6 +59,7 @@ class Server:
         self.server_socket.listen()
 
         ui.show(f"The server was started on port {self.port}")
+        logger.log.info(f"The server was started on port {self.port}")
 
         # Accept connections from clients while server is working
         while self.isActive:
@@ -74,8 +76,10 @@ class Server:
                 if self.__isBanned(ip):  # Check if client was banned
                     self.close_connection(nick, self.BANNED_MSG)
                 else:  # Start receiving messages
-                    ui.show(
-                        f"{nick} {ip}:{port} established connection with server")
+                    msg = f"{nick} {ip}:{port} established connection with server"
+                    ui.show(msg)
+                    logger.log.info(msg)
+                    del msg
 
                     Thread(target=self.__receive, args=(cSocket, nick)).start()
 
@@ -97,6 +101,7 @@ class Server:
         self.server_socket.close()
 
         ui.show("Server has been stopped")
+        logger.log.info("Server has been stopped")
 
     def __receive(self, cSocket: socket.socket, nickname: str) -> None:
         """Processing messages from the client"""
@@ -114,6 +119,7 @@ class Server:
                 else:
                     self.broadcast(message, nickname)
                     ui.show(message, nickname, 'user')
+                    logger.log.info(f"{nickname}: {message}")
 
             except ConnectionAbortedError:  # Raise when client socket is closed by server
                 pass
@@ -167,12 +173,16 @@ class Server:
             del self.clients[nickname]
 
             if reason == self.BANNED_MSG:
-                ui.show(
-                    f"{nickname}:{ip} was banned until {unban_date} or tryed to connect")
+                msg = f"{nickname}:{ip} was banned until {unban_date} or tryed to connect"
+                ui.show(msg)
+                logger.log.info(msg)
+                del msg
             else:
                 ui.show(f"Client {nickname} was disconnected")
+                logger.log.info(f"Client {nickname} was disconnected")
         else:
             ui.show(f"Client with name {nickname} is not connected")
+            logger.log.info(f"Client with name {nickname} is not connected")
 
     @checkServer_isWorking
     def show_connections(self) -> None:
@@ -209,6 +219,7 @@ class Server:
         if self.__isBanned(ip):
             del self.banned[ip]
             ui.show(f"Client with IP {ip} was unbanned")
+            logger.log.info(f"Client with IP {ip} was unbanned")
         else:
             ui.show(f"Client with IP {ip} is not banned")
 
@@ -218,6 +229,7 @@ class Server:
 
         self.banned = dict()
         ui.show("All clients was seccesfully unbanned")
+        logger.log.info("All clients was seccesfully unbanned")
 
     @checkServer_isWorking
     def show_banned(self) -> None:
