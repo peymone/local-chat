@@ -73,8 +73,6 @@ class Console:
                     command = self.__command
                     args = None
 
-                print(command, args)
-
                 # Execute commands
                 match command:
                     case 'clear': ui.clear_screen()
@@ -137,6 +135,8 @@ class Console:
         if server.isActive:
             server.stop()
 
+        print('\n')
+
 
 if __name__ == '__main__':
 
@@ -151,6 +151,7 @@ if __name__ == '__main__':
     if ui.start_prompt() is True:
         ui.show_logo()
         Thread(target=server.start).start()
+        print('\n')
     else:
         ui.show_logo()
         admin_console.show_commands()
