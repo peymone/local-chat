@@ -51,6 +51,7 @@ class Server:
     def start(self) -> None:
         """Create a server socket and accept connections"""
 
+        logger.debug.debug("server_start thread - start")
         self.isActive = True
 
         # Create a server socket and enable listen mode - IPv4, TCP
@@ -64,6 +65,7 @@ class Server:
         # Accept connections from clients while server is working
         while self.isActive:
             try:
+                logger.debug.debug("accept connections loop - start")
 
                 # Accept client connection and receive first message
                 cSocket, cAddress = self.server_socket.accept()  # IO Blocking
@@ -73,18 +75,24 @@ class Server:
                 nick = cSocket.recv(1024).decode()
                 self.clients[nick] = cSocket, ip, port
 
+                logger.debug.debug(f"connection accepted - {nick} {ip}:{port}")
+
                 if self.__isBanned(ip):  # Check if client was banned
                     self.close_connection(nick, self.BANNED_MSG)
                 else:  # Start receiving messages
                     msg = f"{nick} {ip}:{port} established connection with server"
                     ui.show(msg)
                     logger.log.info(msg)
-                    del msg
 
                     Thread(target=self.__receive, args=(cSocket, nick)).start()
 
             except OSError:  # Raise when server is stopped but still accepting connections
                 pass
+
+            finally:
+                ui.show("Server has been stopped")
+                logger.log.info("Server has been stopped")
+                logger.debug.debug("server_start thread - stop")
 
     @checkServer_isWorking
     def stop(self) -> None:
@@ -100,13 +108,10 @@ class Server:
         self.__createBan_txt()
         self.server_socket.close()
 
-        ui.show("Server has been stopped")
-        logger.log.info("Server has been stopped")
-
     def __receive(self, cSocket: socket.socket, nickname: str) -> None:
         """Processing messages from the client"""
-
         client_ip = self.clients[nickname][1]
+        logger.debug.debug(f"receive thread - start {nickname} {client_ip}")
 
         # Receive messages from client while server client is not disconnected or banned
         while nickname in self.clients and self.__isBanned(client_ip) != True:
@@ -115,6 +120,7 @@ class Server:
 
                 # Message processing
                 if message == self.CLOSE_MSG:
+                    logger.debug.debug(f"CLOSE_MSG received for {nickname}")
                     self.close_connection(nickname)
                 else:
                     self.broadcast(message, nickname)
@@ -126,6 +132,10 @@ class Server:
 
             except ConnectionResetError:  # Raise when client socket is closed by client
                 self.close_connection(nickname)
+
+            finally:
+                logger.debug.debug(
+                    f"receive thread - stop {nickname} {client_ip}")
 
     @checkServer_isWorking
     def send(self, nickname: str, message: str, sender: str = 'admin') -> None:
@@ -158,6 +168,8 @@ class Server:
             client_socket: socket.socket = self.clients[nickname][0]
             ip: str = self.clients[nickname][1]
 
+            logger.debug.debug(f"close connection {nickname} - {reason}")
+
             # Send reason message to client
             match reason:
                 case self.CLOSE_MSG:
@@ -172,17 +184,17 @@ class Server:
             client_socket.close()
             del self.clients[nickname]
 
+            logger.debug.debug(f"close connection - stop {nickname}")
+
             if reason == self.BANNED_MSG:
                 msg = f"{nickname}:{ip} was banned until {unban_date} or tryed to connect"
                 ui.show(msg)
                 logger.log.info(msg)
-                del msg
             else:
                 ui.show(f"Client {nickname} was disconnected")
                 logger.log.info(f"Client {nickname} was disconnected")
         else:
             ui.show(f"Client with name {nickname} is not connected")
-            logger.log.info(f"Client with name {nickname} is not connected")
 
     @checkServer_isWorking
     def show_connections(self) -> None:
