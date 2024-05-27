@@ -1,26 +1,54 @@
-from rich.console import Console
+from datetime import datetime
+
 from rich.theme import Theme
 from rich.prompt import Confirm
+from rich.console import Console
+
+from pyfiglet import figlet_format
 
 
 class Interface:
     def __init__(self) -> None:
-        self.__theme = Theme({})
+        self.tFormat = "%H:%M:%S"
+        self.__theme = Theme({
+            'system': 'cyan italic bold',
+            'license': 'green italic dim',
+            'args': 'white dim',
+            'logo': 'green bold',
+            'admin': 'red',
+            'user': 'green',
+            'warning': 'yellow1'
+        })
 
-        self.console = Console(
-            width=100, theme=self.__theme)  # Max 30 characrer
+        self.console = Console(theme=self.__theme)
 
-    def enter(self, prompt):
-        pass
+    def enter(self, prompt: str, style='system') -> str:
+        return self.console.input(f"[{style}]{prompt}[/{style}]")
 
-    def show(self, prompt):
-        pass
+    def show(self, message: str, sender: str = 'system', style: str = 'system') -> None:
+        now = datetime.now().strftime(self.tFormat)
 
-    def logo(self):
-        pass
+        match sender:
+            # System can be warning message or just information
+            case 'system':
+                self.console.print(f"[{style}]{now} {message}[/{style}]")
+            case _:
+                msg = f"[{style}]{now} {sender}:[/{style}]  {message}"
+                self.console.print(msg)
+
+    def show_logo(self, logo_text: str = 'local chat') -> None:
+        logo = figlet_format(logo_text, font='larry3d')
+        self.console.print(logo, style='logo')
+        self.console.print('(c) by Cassidy Bell', style='license')
 
     def start_prompt(self) -> bool:
-        return Confirm.ask("Do you want to start server?")
+        confirm = Confirm(console=self.console)
+        confirmation = confirm.ask("Do you want to start server?")
+        self.clear_screen()
+        return confirmation
+
+    def clear_screen(self):
+        ui.console.clear()
 
 
 ui = Interface()

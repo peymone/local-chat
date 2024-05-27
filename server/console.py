@@ -1,4 +1,5 @@
 from server import Server
+from interface import ui
 
 from sys import argv
 from threading import Thread
@@ -9,35 +10,60 @@ class Console:
         self.__command = None
         self.__commands = {
             'exit': "close application",
-            'commands': "Show all available commands",
+            'clear': "clear the screen of characters",
+            'commands': "show all available commands",
 
-            'status': "Show current server status",
-            'start': "Start server",
-            'stop': "Stop server",
-            'clients': "Show clients currently connected to server",
-            'disconnect |nickname|': "Disconnect client with specific nickname",
-            'send |nickname| |message|': "Send message to a specific client",
-            'sendall |message|': "Broadcast message to all connected clients",
-            'ban |nickname| |n|': "Ban client for n minutes or forever (omitted n)",
-            'banned': "Show all banned clients at the moment",
-            'unban |ip|': "Unban client by IP",
-            'unbanall': "Unban all clients",
+            'status': "show current server status",
+            'start': "start server",
+            'stop': "stop server",
+            'clients': "show clients currently connected to server",
+            'disconnect nickname': "disconnect client with a specific nickname",
+            'send nickname message': "send message to a specific client",
+            'sendall message': "broadcast message to all connected clients",
+            'ban nickname n': "ban client for n minutes or forever (omitted n)",
+            'banned': "show all banned clients at the moment",
+            'unban ip': "unban client by IP",
+            'unbanall': "unban all clients",
 
-            'nickname |old_nick| |new_nick|': "Change nickname to a specific client"
+            'nickname old_nick new_nick': "change nickname to a specific client"
         }
 
     def show_commands(self):
         """Show all available commands"""
 
-        for command, description in self.__commands.items():
-            print(f"{command} {description}")
+        print('\n')
+        ui.console.print("List of available commands: ", style='system')
+        print('\n')
 
-    def commands_handler(self):
+        # Calculate the number of spaces from the longest command length
+        spaces = 30
+        maxCmd_spaces = len(max(self.__commands, key=len)) + spaces
+
+        for command, description in self.__commands.items():
+            # Сalculate the required number of spaces
+            indentation = maxCmd_spaces - len(command)
+
+            # Apply a custom interface to command arguments
+            if len(command.split()) > 1:
+                cmd = command.split()[0]
+                args = ' '.join(command.split()[1:])
+
+                ui.console.print(cmd, end=' ')
+                ui.console.print(args, style='args', end=' ' * indentation)
+
+            else:
+                ui.console.print(command, end=' ' * indentation)
+
+            ui.console.print(description)
+
+        print('\n')
+
+    def commands_handler(self, cmd=None):
         """Enter and execute commands"""
 
         try:
             while self.__command != 'exit':
-                self.__command = input("Enter command /> ")
+                self.__command = ui.enter('Enter command /> ')
 
                 # Parse command and arguments
                 if len(self.__command.split()) >= 2:
@@ -47,8 +73,11 @@ class Console:
                     command = self.__command
                     args = None
 
+                print(command, args)
+
                 # Execute commands
                 match command:
+                    case 'clear': ui.clear_screen()
                     case 'commands': self.show_commands()
                     case 'status': server.status()
                     case 'start': Thread(target=server.start).start()
@@ -56,24 +85,28 @@ class Console:
                     case 'clients': server.show_connections()
                     case 'disconnect':
                         if args is None:
-                            print("Nickname can not be empty")
+                            ui.show("Nickname can not be empty",
+                                    style='warning')
                         else:
                             server.close_connection(args[0], server.CLOSE_MSG)
                     case 'send':
                         if args is None or len(args) < 2:
-                            print("Nickname and message can not be empty")
+                            ui.show(
+                                "Nickname and message can not be empty", style='warning')
                         else:
                             message = ' '.join(args[1:])
                             server.send(args[0], message)
                     case 'sendall':
                         if args is None:
-                            print("Message can not be empty")
+                            ui.show("Message can not be empty",
+                                    style='warning')
                         else:
                             message = ' '.join(args[0:])
                             server.broadcast(message)
                     case 'ban':
                         if args is None:
-                            print("Nickname can not be empy")
+                            ui.show("Nickname can not be empy",
+                                    style='warning')
                         elif len(args) < 2:
                             server.ban(args[0])
                         else:
@@ -81,17 +114,20 @@ class Console:
                                 ban_duration = int(args[1])
                                 server.ban(args[0], ban_duration)
                             except ValueError:
-                                print("Ban duration must be integer")
+                                ui.show(
+                                    "Ban duration must be integer", style='warning')
                     case 'banned': server.show_banned()
                     case 'unban':
                         if args is None:
-                            print("IP address can not be empy")
+                            ui.show("IP address can not be empy",
+                                    style='warning')
                         else:
                             server.unban(args[0])
                     case 'unbanall': server.unban_all()
                     case 'nickname':  # Not implemented
-                        if args is None and len(args) < 2:
-                            print("Previous nick and new nick can not be empty")
+                        if args is None or len(args) < 2:
+                            ui.show(
+                                "Previous nick and new nick can not be empty", style='warning')
                         else:
                             pass
 
@@ -103,6 +139,7 @@ class Console:
 
 
 if __name__ == '__main__':
+
     # Set server port manually or use 6061 by default
     if len(argv) > 1:
         server = Server(port=int(argv[1]))
@@ -110,5 +147,12 @@ if __name__ == '__main__':
         server = Server(port=6061)
 
     admin_console = Console()
-    admin_console.show_commands()
+
+    if ui.start_prompt() is True:
+        ui.show_logo()
+        Thread(target=server.start).start()
+    else:
+        ui.show_logo()
+        admin_console.show_commands()
+
     admin_console.commands_handler()
