@@ -265,7 +265,7 @@ class Server:
         """Fill banned dictionary"""
 
         try:
-            with open('banned.txt', 'r') as file:
+            with open('data/banned.txt', 'r') as file:
                 for line in file.readlines():
                     delimiter_index = line.strip().find(':')
                     ip: str = line.strip()[:delimiter_index]
@@ -280,10 +280,10 @@ class Server:
         """Create txt with currently banned clients"""
 
         if len(self.banned) == 0:
-            with open('banned.txt', 'w'):
+            with open('data/banned.txt', 'w'):
                 pass
         else:
-            with open('banned.txt', 'w') as file:
+            with open('data/banned.txt', 'w') as file:
                 for ip, unban in self.banned.items():
                     unban_date = unban.strftime(self.tFormat)
                     file.write(f"{ip}:{unban_date}\n")

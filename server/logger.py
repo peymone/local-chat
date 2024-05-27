@@ -14,7 +14,7 @@ class Logger:
 
         # Create a file for logger handling
         handler = logging.FileHandler(
-            'logs/logs.log', mode='a', encoding='utf-8')
+            'data/logs.log', mode='a', encoding='utf-8')
         # set a format to log message
         formatter = logging.Formatter(self.log_message, self.tFormat)
 
@@ -29,7 +29,7 @@ class Logger:
 
         # Create a file for logger handling
         handler = logging.FileHandler(
-            'logs/debug.log', mode='a', encoding='utf-8')
+            'data/debug.log', mode='a', encoding='utf-8')
         # set a format to log message
         formatter = logging.Formatter(self.log_message, self.tFormat)
 
