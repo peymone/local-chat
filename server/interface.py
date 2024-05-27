@@ -31,10 +31,14 @@ class Interface:
         match sender:
             # System can be warning message or just information
             case 'system':
+                # print('\n')
                 self.console.print(f"[{style}]{now} {message}[/{style}]")
+                # print('\n')
             case _:
                 msg = f"[{style}]{now} {sender}:[/{style}]  {message}"
+                # print('\n')
                 self.console.print(msg)
+                # print('\n')
 
     def show_logo(self, logo_text: str = 'local chat') -> None:
         logo = figlet_format(logo_text, font='larry3d')
