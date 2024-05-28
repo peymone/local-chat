@@ -1,4 +1,5 @@
 from server import Server
+from logger import logger
 from interface import ui
 
 from sys import argv
@@ -61,6 +62,8 @@ class Console:
     def commands_handler(self, cmd=None):
         """Enter and execute commands"""
 
+        logger.debug.debug("commands handler - start")
+
         try:
             while self.__command != 'exit':
                 self.__command = ui.enter('Enter command /> ')
@@ -72,6 +75,8 @@ class Console:
                 else:
                     command = self.__command
                     args = None
+
+                logger.debug.debug(f"commands entered: {command} {args}")
 
                 # Execute commands
                 match command:
@@ -135,6 +140,7 @@ class Console:
         if server.isActive:
             server.stop()
 
+        logger.debug.debug("commands handler - stop")
         print('\n')
 
 

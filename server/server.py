@@ -2,8 +2,8 @@ from datetime import datetime, timedelta
 from threading import Thread
 import socket
 
-from interface import ui
 from logger import logger
+from interface import ui
 
 
 class Server:
@@ -59,8 +59,8 @@ class Server:
         self.server_socket.bind((self.host, self.port))
         self.server_socket.listen()
 
-        ui.show(f"The server was started on port {self.port}")
-        logger.log.info(f"The server was started on port {self.port}")
+        ui.show(f"Server was started on port {self.port}")
+        logger.log.info(f"Server was started on port {self.port}")
 
         # Accept connections from clients while server is working
         while self.isActive:
@@ -71,7 +71,7 @@ class Server:
                 cSocket, cAddress = self.server_socket.accept()  # IO Blocking
                 ip, port = cAddress[0], cAddress[1]
 
-                # Receive first message and add save client data
+                # Receive first message and save client data
                 nick = cSocket.recv(1024).decode()
                 self.clients[nick] = cSocket, ip, port
 
@@ -98,6 +98,8 @@ class Server:
     def stop(self) -> None:
         """Close active connections and server socket"""
 
+        logger.debug.debug("stop method called")
+
         # Close active connections
         if len(self.clients) > 0:
             for nick in self.clients.copy():
@@ -111,7 +113,7 @@ class Server:
     def __receive(self, cSocket: socket.socket, nickname: str) -> None:
         """Processing messages from the client"""
         client_ip = self.clients[nickname][1]
-        logger.debug.debug(f"receive thread - start {nickname} {client_ip}")
+        logger.debug.debug(f"receive thread - start |{nickname} {client_ip}|")
 
         # Receive messages from client while server client is not disconnected or banned
         while nickname in self.clients and self.__isBanned(client_ip) != True:
@@ -135,7 +137,7 @@ class Server:
 
             finally:
                 logger.debug.debug(
-                    f"receive thread - stop {nickname} {client_ip}")
+                    f"receive thread - stop |{nickname} {client_ip}|")
 
     @checkServer_isWorking
     def send(self, nickname: str, message: str, sender: str = 'admin') -> None:
@@ -144,6 +146,7 @@ class Server:
         if nickname in self.clients:
             client_socket = self.clients[nickname][0]
             client_socket.send(f"{sender}: {message}".encode())
+            logger.log.info(f"{sender}: {message}")
         else:
             ui.show(f"Client with name {nickname} is not connected")
 
@@ -187,7 +190,7 @@ class Server:
             logger.debug.debug(f"close connection - stop {nickname}")
 
             if reason == self.BANNED_MSG:
-                msg = f"{nickname}:{ip} was banned until {unban_date} or tryed to connect"
+                msg = f"{nickname}: {ip} was banned until {unban_date} or tryed to connect"
                 ui.show(msg)
                 logger.log.info(msg)
             else:
