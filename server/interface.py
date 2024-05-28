@@ -1,9 +1,11 @@
 from datetime import datetime
 
+# Used for custom rerminal interface
 from rich.theme import Theme
 from rich.prompt import Confirm
 from rich.console import Console
 
+# Used for draw text in 3d
 from pyfiglet import figlet_format
 
 
