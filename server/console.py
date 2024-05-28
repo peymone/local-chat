@@ -145,15 +145,15 @@ class Console:
 
 
 if __name__ == '__main__':
+    admin_console = Console()
 
-    # Set server port manually or use 6061 by default
+    # Creare server object with custom port or default
     if len(argv) > 1:
         server = Server(port=int(argv[1]))
     else:
         server = Server(port=6061)
 
-    admin_console = Console()
-
+    # Start server immediately or display a list of commands
     if ui.start_prompt() is True:
         ui.show_logo()
         Thread(target=server.start).start()
@@ -162,4 +162,5 @@ if __name__ == '__main__':
         ui.show_logo()
         admin_console.show_commands()
 
+    # Start entering and processing commands
     admin_console.commands_handler()
