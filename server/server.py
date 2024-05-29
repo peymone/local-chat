@@ -17,7 +17,6 @@ class Server:
         self.banned = dict()
         self.tFormat = "%d.%m.%Y %H:%M:%S"
         self.CLOSE_MSG = 'CLOSE_CONNECTION'
-        self.BANNED_MSG = 'BANNED'
 
         # Fill dictionary with current banned clients
         self.__checkBan_txt()
@@ -89,10 +88,10 @@ class Server:
             except OSError:  # Raise when server is stopped but still accepting connections
                 pass
 
-            finally:
-                ui.show("Server has been stopped")
-                logger.log.info("Server has been stopped")
-                logger.debug.debug("server_start thread - stop")
+        # Show it when loop is stopped
+        ui.show("Server has been stopped")
+        logger.log.info("Server has been stopped")
+        logger.debug.debug("server_start thread - stop")
 
     @checkServer_isWorking
     def stop(self) -> None:
@@ -115,29 +114,26 @@ class Server:
         client_ip = self.clients[nickname][1]
         logger.debug.debug(f"receive thread - start |{nickname} {client_ip}|")
 
-        # Receive messages from client while server client is not disconnected or banned
+        # Receive messages from the client while the connection is established
         while nickname in self.clients and self.__isBanned(client_ip) != True:
             try:
                 message = cSocket.recv(1024).decode()
 
                 # Message processing
-                if message == self.CLOSE_MSG:
+                if message == self.CLOSE_MSG:  # No need actualy
                     logger.debug.debug(f"CLOSE_MSG received for {nickname}")
                     self.close_connection(nickname)
                 else:
                     self.broadcast(message, nickname)
                     ui.show(message, nickname, 'user')
                     logger.log.info(f"{nickname}: {message}")
-
             except ConnectionAbortedError:  # Raise when client socket is closed by server
                 pass
 
             except ConnectionResetError:  # Raise when client socket is closed by client
                 self.close_connection(nickname)
 
-            finally:
-                logger.debug.debug(
-                    f"receive thread - stop |{nickname} {client_ip}|")
+        logger.debug.debug(f"receive thread - stop |{nickname} {client_ip}|")
 
     @checkServer_isWorking
     def send(self, nickname: str, message: str, sender: str = 'admin') -> None:
@@ -171,7 +167,7 @@ class Server:
             client_socket: socket.socket = self.clients[nickname][0]
             ip: str = self.clients[nickname][1]
 
-            logger.debug.debug(f"close connection {nickname} - {reason}")
+            logger.debug.debug(f"close connection |{nickname} - {reason}|")
 
             # Send reason message to client
             match reason:
@@ -187,7 +183,7 @@ class Server:
             client_socket.close()
             del self.clients[nickname]
 
-            logger.debug.debug(f"close connection - stop {nickname}")
+            logger.debug.debug(f"close connection - stop |{nickname}|")
 
             if reason == self.BANNED_MSG:
                 msg = f"{nickname}: {ip} was banned until {unban_date} or tryed to connect"
