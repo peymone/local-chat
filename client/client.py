@@ -72,9 +72,11 @@ class Client:
                 match message:
                     case self.BANNED_MSG:
                         unban_date = self.client_socket.recv(1024).decode()
-                        print(f"You was ban by admin until {unban_date}")
                         self.stop()
-                    case self.CLOSE_MSG: self.stop()
+                        print(f"You was ban by admin until {unban_date}")
+                    case self.CLOSE_MSG:
+                        self.stop()
+                        print("Server was stopped or break connection")
                     case _: print(message)
 
             except ConnectionResetError:  # Raise when client socket is closed by server

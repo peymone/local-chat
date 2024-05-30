@@ -72,6 +72,9 @@ class Console:
         except KeyboardInterrupt:
             self.__command = 'exit'
 
+        if client.isActive:
+            client.stop()
+
         print('\n')
 
 
