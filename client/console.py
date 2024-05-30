@@ -1,5 +1,6 @@
-from sys import argv
 from threading import Thread
+from sys import argv
+import configparser
 
 from client import Client
 from interface import ui
@@ -88,21 +89,28 @@ class Console:
 
 if __name__ == '__main__':
     admin_console = Console()
+    config = configparser.ConfigParser()
     nickname = ui.enter("Enter your nickname: ")
+
+    # Set a client settings
+    config.read("config.ini")
+    server_host = config['client']['server_host']
+    server_port = int(config['client']['server_port'])
+    logo_text = config['client']['logo_text']
 
     # Creare client object with custom port or default
     if len(argv) > 1:
         client = Client(argv[1], int(argv[2]), nickname)
     else:
-        client = Client('192.168.0.111', 60065, nickname)
+        client = Client(server_host, server_port, nickname)
 
     # Start client immediately or display a list of commands
     if ui.start_prompt() is True:
-        ui.show_logo()
+        ui.show_logo(logo_text)
         Thread(target=client.start).start()
         print('\n')
     else:
-        ui.show_logo()
+        ui.show_logo(logo_text)
         admin_console.show_commands()
 
     # Start entering and processing commands

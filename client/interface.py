@@ -43,7 +43,7 @@ class Interface:
                 msg = f"[{style}]{now} {sender}:[/{style}]  {message}"
                 self.console.print(msg)
 
-    def show_logo(self, logo_text: str = 'local chat') -> None:
+    def show_logo(self, logo_text: str) -> None:
         """Show logo with pyfiglet lib"""
 
         logo = figlet_format(logo_text, font='larry3d')
