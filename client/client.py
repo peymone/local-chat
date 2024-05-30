@@ -1,16 +1,18 @@
 import socket
 
+from interface import ui
+
 
 class Client:
     """Class for creating and managing connections"""
 
-    def __init__(self, server_host: str, server_port: int) -> None:
+    def __init__(self, server_host: str, server_port: int, nickname: str) -> None:
         self.server_host = server_host
         self.server_port = server_port
+        self.nick = nickname
         self.isActive = False
         self.BANNED_MSG = 'BANNED'
         self.CLOSE_MSG = 'CLOSE_CONNECTION'
-        self.nick = input("Enter your nickname: ")
 
     def __activityCheck(func):
         """Decorator for checking client activity before call other functions"""
@@ -18,9 +20,9 @@ class Client:
         def wrapper(*args, **kwargs):
 
             if (func.__name__ != 'start') and (args[0].isActive == False):
-                print("Client is not working at the moment")
+                ui.show("Client is not working at the moment", style='warning')
             elif (func.__name__ == 'start') and args[0].isActive:
-                print("Client is already working")
+                ui.show("Client is already working", style='warning')
             else:
                 func(*args, **kwargs)
 
@@ -36,15 +38,17 @@ class Client:
         try:  # Try to connect to the server and send first messages
             self.client_socket.connect((self.server_host, self.server_port))
             self.client_socket.send(self.nick.encode())
-            print(
-                f"Succesfully connected to the server on {self.server_host}:{self.server_port}")
+            print('\n')
+            ui.show(
+                f"Сlient successfully connected to the server on {self.server_host}:{self.server_port}")
 
             # Start message receiving loop
             self.isActive = True
             self.__receive()
 
         except ConnectionRefusedError:
-            print("Server is not working at the moment")
+            print('\n')
+            ui.show("Server is not working at the moment", style='warning')
 
     @__activityCheck
     def stop(self) -> None:
@@ -52,7 +56,9 @@ class Client:
 
         self.isActive = False
         self.client_socket.close()
-        print("Client was stopped")
+        print('\n')
+        ui.show("Client was stopped")
+        print('\n')
 
     @__activityCheck
     def send(self, message: str) -> None:
@@ -73,13 +79,21 @@ class Client:
                     case self.BANNED_MSG:
                         unban_date = self.client_socket.recv(1024).decode()
                         self.stop()
-                        print(f"You was ban by admin until {unban_date}")
+                        ui.show(
+                            f"You was ban by admin until {unban_date}", style='ban')
                     case self.CLOSE_MSG:
                         self.stop()
-                        print("Server was stopped or break connection")
-                    case _: print(message)
+                        ui.show("Server was stopped or break connection")
+                    case _:
+                        sender = message[:message.index(':')]
+                        msg = ' '.join(message.split()[1:])
+
+                        if sender == 'admin':
+                            ui.show(msg, sender=sender, style=sender)
+                        else:
+                            ui.show(msg, sender=sender, style='user')
 
             except ConnectionResetError:  # Raise when client socket is closed by server
-                print("Server was stopped or break connection")
+                ui.show("Server was stopped or break connection")
             except ConnectionAbortedError:  # Raise when client socket is closed by client
                 pass

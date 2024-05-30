@@ -1,5 +1,6 @@
 from datetime import datetime, timedelta
 from threading import Thread
+from time import sleep
 import socket
 
 from logger import logger
@@ -176,6 +177,7 @@ class Server:
                 case self.BANNED_MSG:
                     unban_date = self.__getUnban_date(ip)
                     client_socket.send(reason.encode())
+                    sleep(1)
                     client_socket.send(unban_date.encode())
                 case _: pass
 
