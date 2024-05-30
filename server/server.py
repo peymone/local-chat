@@ -23,21 +23,17 @@ class Server:
         # Fill dictionary with current banned clients
         self.__checkBan_txt()
 
-    def checkServer_isWorking(func):
+    def __activityCheck(func):
         def wrapper(*args, **kwargs):
-            if args[0].isActive:
-                func(*args, **kwargs)
-            else:
-                ui.show("Server is not working at the moment", style='warning')
-        return wrapper
 
-    def checkServer_isNotWorking(func):
-        def wrapper(*args, **kwargs):
-            if args[0].isActive:
+            if (func.__name__ != 'start') and (args[0].isActive == False):
+                ui.show("Server is not working at the moment", style='warning')
+            elif (func.__name__ == 'start') and args[0].isActive:
                 ui.show(
                     f"Server is already working on port {args[0].port}", style='warning')
             else:
                 func(*args, **kwargs)
+
         return wrapper
 
     def status(self) -> None:
@@ -48,7 +44,7 @@ class Server:
         else:
             ui.show("Server is not working at the moment")
 
-    @checkServer_isNotWorking
+    @__activityCheck
     def start(self) -> None:
         """Create a server socket and accept connections"""
 
@@ -95,7 +91,7 @@ class Server:
         logger.log.info("Server has been stopped")
         logger.debug.debug("server_start thread - stop")
 
-    @checkServer_isWorking
+    @__activityCheck
     def stop(self) -> None:
         """Close active connections and server socket"""
 
@@ -136,7 +132,7 @@ class Server:
 
         logger.debug.debug(f"receive thread - stop |{nickname} {client_ip}|")
 
-    @checkServer_isWorking
+    @__activityCheck
     def send(self, nickname: str, message: str, sender: str = 'admin') -> None:
         """Send message to a specific client"""
 
@@ -147,7 +143,7 @@ class Server:
         else:
             ui.show(f"Client with name {nickname} is not connected")
 
-    @checkServer_isWorking
+    @__activityCheck
     def broadcast(self, message: str, sender: str = 'admin') -> None:
         """Send message to all connected clients"""
 
@@ -160,7 +156,7 @@ class Server:
                 else:
                     self.send(nickname, message, sender)
 
-    @checkServer_isWorking
+    @__activityCheck
     def close_connection(self, nickname: str, reason: str = None) -> None:
         """Close a connection to a specific client"""
 
@@ -197,7 +193,7 @@ class Server:
         else:
             ui.show(f"Client with name {nickname} is not connected")
 
-    @checkServer_isWorking
+    @__activityCheck
     def show_connections(self) -> None:
         """Show current active connections"""
 
@@ -207,7 +203,7 @@ class Server:
         else:
             ui.show("Server have no connected clients at the moment")
 
-    @checkServer_isWorking
+    @__activityCheck
     def ban(self, nickname: str, duration: int = -1) -> None:
         """Ban a specific client for n minutes or forever"""
 
@@ -225,7 +221,7 @@ class Server:
         else:
             ui.show(f"Client with name {nickname} is not connected")
 
-    @checkServer_isWorking
+    @__activityCheck
     def unban(self, ip: str) -> None:
         """Unban a specific client by IP"""
 
@@ -236,7 +232,7 @@ class Server:
         else:
             ui.show(f"Client with IP {ip} is not banned")
 
-    @checkServer_isWorking
+    @__activityCheck
     def unban_all(self) -> None:
         """Unban all clients"""
 
@@ -244,7 +240,7 @@ class Server:
         ui.show("All clients was seccesfully unbanned")
         logger.log.info("All clients was seccesfully unbanned")
 
-    @checkServer_isWorking
+    @__activityCheck
     def show_banned(self) -> None:
         """Show all banned clients at the moment"""
 
