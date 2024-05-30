@@ -94,7 +94,7 @@ if __name__ == '__main__':
     if len(argv) > 1:
         client = Client(argv[1], int(argv[2]), nickname)
     else:
-        client = Client('192.168.0.111', 6061, nickname)
+        client = Client('192.168.0.111', 60065, nickname)
 
     # Start client immediately or display a list of commands
     if ui.start_prompt() is True:
