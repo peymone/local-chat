@@ -2,10 +2,12 @@ import socket
 
 
 class Client:
+    """Class for creating and managing connections"""
+
     def __init__(self, server_host: str, server_port: int) -> None:
         self.server_host = server_host
         self.server_port = server_port
-        self.isActive = None
+        self.isActive = False
         self.BANNED_MSG = 'BANNED'
         self.CLOSE_MSG = 'CLOSE_CONNECTION'
         self.nick = input("Enter your nickname: ")
@@ -15,20 +17,18 @@ class Client:
 
         def wrapper(*args, **kwargs):
 
-            if func.__name__ == 'start':
-                print("Client is already working")
-            elif args[0].isActive:
-                func(*args, **kwargs)
-            else:
+            if (func.__name__ != 'start') and (args[0].isActive == False):
                 print("Client is not working at the moment")
+            elif (func.__name__ == 'start') and args[0].isActive:
+                print("Client is already working")
+            else:
+                func(*args, **kwargs)
 
         return wrapper
 
     @__activityCheck
     def start(self) -> None:
         """Create client socket and connect to the server"""
-
-        self.isActive = True
 
         # Сreate a client socket to communicate with the server
         self.client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -40,6 +40,7 @@ class Client:
                 f"Succesfully connected to the server on {self.server_host}:{self.server_port}")
 
             # Start message receiving loop
+            self.isActive = True
             self.__receive()
 
         except ConnectionRefusedError:
