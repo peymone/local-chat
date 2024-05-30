@@ -25,8 +25,6 @@ class Console:
             'banned': "show all banned clients at the moment",
             'unban ip': "unban client by IP",
             'unbanall': "unban all clients",
-
-            'nickname old_nick new_nick': "change nickname to a specific client"
         }
 
     def show_commands(self):
@@ -127,12 +125,6 @@ class Console:
                         else:
                             server.unban(args[0])
                     case 'unbanall': server.unban_all()
-                    case 'nickname':  # Not implemented
-                        if args is None or len(args) < 2:
-                            ui.show(
-                                "Previous nick and new nick can not be empty", style='warning')
-                        else:
-                            pass
 
         except KeyboardInterrupt:
             self.__command = 'exit'
@@ -141,7 +133,7 @@ class Console:
             server.stop()
 
         logger.debug.debug("commands handler - stop")
-        print('\n')
+        ui.clear_screen()
 
 
 if __name__ == '__main__':
@@ -151,7 +143,7 @@ if __name__ == '__main__':
     if len(argv) > 1:
         server = Server(port=int(argv[1]))
     else:
-        server = Server(port=6061)
+        server = Server(port=60065)
 
     # Start server immediately or display a list of commands
     if ui.start_prompt() is True:
