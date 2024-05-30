@@ -141,7 +141,7 @@ class Console:
             server.stop()
 
         logger.debug.debug("commands handler - stop")
-        print('\n')
+        ui.clear_screen()
 
 
 if __name__ == '__main__':
