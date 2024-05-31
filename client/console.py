@@ -72,8 +72,7 @@ class Console:
                     case 'stop': client.stop()
                     case 'send':
                         if args is None:
-                            ui.show("message can not be empty",
-                                    style='warning')
+                            ui.show("message can not be empty", style='warning')
                         else:
                             message = ' '.join(args)
                             client.send(message)

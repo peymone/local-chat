@@ -3,8 +3,9 @@ from threading import Thread
 from time import sleep
 import socket
 
-from logger import logger
 from interface import ui
+from logger import logger
+from security import security
 
 
 class Server:
@@ -29,8 +30,7 @@ class Server:
             if (func.__name__ != 'start') and (args[0].isActive == False):
                 ui.show("Server is not working at the moment", style='warning')
             elif (func.__name__ == 'start') and args[0].isActive:
-                ui.show(
-                    f"Server is already working on port {args[0].port}", style='warning')
+                ui.show(f"Server is already working on port {args[0].port}", style='warning')
             else:
                 func(*args, **kwargs)
 
@@ -68,18 +68,22 @@ class Server:
                 cSocket, cAddress = self.server_socket.accept()  # IO Blocking
                 ip, port = cAddress[0], cAddress[1]
 
+                # Public key exchange for encryption
+                cSocket.send(security.getSerialized_publicKey())
+                public_key = cSocket.recv(1024)
+
                 # Receive first message and save client data
-                nick = cSocket.recv(1024).decode()
-                self.clients[nick] = cSocket, ip, port
+                nick = security.decrypt(cSocket.recv(1024))
+                self.clients[nick] = cSocket, ip, port, public_key
 
                 logger.debug.debug(f"connection accepted - {nick} {ip}:{port}")
 
                 if self.__isBanned(ip):  # Check if client was banned
                     self.close_connection(nick, self.BANNED_MSG)
                 else:  # Start receiving messages
-                    msg = f"{nick} {ip}:{port} established connection with server"
-                    ui.show(msg)
-                    logger.log.info(msg)
+
+                    ui.show(f"{nick} {ip}:{port} established connection with server")
+                    logger.log.info(f"{nick} {ip}:{port} established connection with server")
 
                     Thread(target=self.__receive, args=(cSocket, nick)).start()
 
@@ -115,7 +119,8 @@ class Server:
         # Receive messages from the client while the connection is established
         while nickname in self.clients and self.__isBanned(client_ip) != True:
             try:
-                message = cSocket.recv(1024).decode()
+                # Receive message and decrypt
+                message = security.decrypt(cSocket.recv(1024))
 
                 # Message processing
                 if message == self.CLOSE_MSG:  # No need actually
@@ -138,7 +143,12 @@ class Server:
 
         if nickname in self.clients:
             client_socket = self.clients[nickname][0]
-            client_socket.send(f"{sender}: {message}".encode())
+            public_key = self.clients[nickname][-1]
+
+            # Encrypt and send message
+            decrypted = security.encrypt(f"{sender}: {message}", public_key)
+            client_socket.send(decrypted)
+
             logger.log.info(f"{sender}: {message}")
         else:
             ui.show(f"Client with name {nickname} is not connected")
@@ -163,18 +173,21 @@ class Server:
         if nickname in self.clients:
             client_socket: socket.socket = self.clients[nickname][0]
             ip: str = self.clients[nickname][1]
+            public_key = self.clients[nickname][-1]
 
             logger.debug.debug(f"close connection |{nickname} - {reason}|")
 
             # Send reason message to client
             match reason:
-                case self.CLOSE_MSG:
-                    client_socket.send(reason.encode())
-                case self.BANNED_MSG:
+                case self.CLOSE_MSG:  # Close connection by server
+                    client_socket.send(security.encrypt(reason, public_key))
+
+                case self.BANNED_MSG:  # Close connection when banned
                     unban_date = self.__getUnban_date(ip)
-                    client_socket.send(reason.encode())
+                    client_socket.send(security.encrypt(reason, public_key))
                     sleep(1)
-                    client_socket.send(unban_date.encode())
+                    client_socket.send(security.encrypt(unban_date, public_key))
+
                 case _: pass
 
             # Close client socket and clear connected clients dict
@@ -184,9 +197,8 @@ class Server:
             logger.debug.debug(f"close connection - stop |{nickname}|")
 
             if reason == self.BANNED_MSG:
-                msg = f"{nickname}: {ip} was banned until {unban_date} or tryed to connect"
-                ui.show(msg)
-                logger.log.info(msg)
+                ui.show(f"{nickname}: {ip} was banned until {unban_date} or tryed to connect")
+                logger.log.info(f"{nickname}: {ip} was banned until {unban_date} or tryed to connect")
             else:
                 ui.show(f"Client {nickname} was disconnected")
                 logger.log.info(f"Client {nickname} was disconnected")

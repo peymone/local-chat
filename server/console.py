@@ -86,28 +86,24 @@ class Console:
                     case 'clients': server.show_connections()
                     case 'disconnect':
                         if args is None:
-                            ui.show("Nickname can not be empty",
-                                    style='warning')
+                            ui.show("Nickname can not be empty", style='warning')
                         else:
                             server.close_connection(args[0], server.CLOSE_MSG)
                     case 'send':
                         if args is None or len(args) < 2:
-                            ui.show(
-                                "Nickname and message can not be empty", style='warning')
+                            ui.show("Nickname and message can not be empty", style='warning')
                         else:
                             message = ' '.join(args[1:])
                             server.send(args[0], message)
                     case 'sendall':
                         if args is None:
-                            ui.show("Message can not be empty",
-                                    style='warning')
+                            ui.show("Message can not be empty", style='warning')
                         else:
                             message = ' '.join(args[0:])
                             server.broadcast(message)
                     case 'ban':
                         if args is None:
-                            ui.show("Nickname can not be empy",
-                                    style='warning')
+                            ui.show("Nickname can not be empy", style='warning')
                         elif len(args) < 2:
                             server.ban(args[0])
                         else:
@@ -115,13 +111,11 @@ class Console:
                                 ban_duration = int(args[1])
                                 server.ban(args[0], ban_duration)
                             except ValueError:
-                                ui.show(
-                                    "Ban duration must be integer", style='warning')
+                                ui.show("Ban duration must be integer", style='warning')
                     case 'banned': server.show_banned()
                     case 'unban':
                         if args is None:
-                            ui.show("IP address can not be empy",
-                                    style='warning')
+                            ui.show("IP address can not be empy", style='warning')
                         else:
                             server.unban(args[0])
                     case 'unbanall': server.unban_all()
