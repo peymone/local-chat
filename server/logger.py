@@ -21,8 +21,7 @@ class Logger:
         self.log.setLevel(logging.INFO)
 
         # Create a file for logger handling
-        handler = logging.FileHandler(
-            'data/logs.log', mode='a', encoding='utf-8')
+        handler = logging.FileHandler('data/logs.log', mode='a', encoding='utf-8')
         # set a format to log message
         formatter = logging.Formatter(self.log_message, self.tFormat)
 
@@ -36,8 +35,7 @@ class Logger:
         self.debug.setLevel(logging.DEBUG)
 
         # Create a file for logger handling
-        handler = logging.FileHandler(
-            'data/debug.log', mode='a', encoding='utf-8')
+        handler = logging.FileHandler('data/debug.log', mode='a', encoding='utf-8')
         # set a format to log message
         formatter = logging.Formatter(self.log_message, self.tFormat)
 

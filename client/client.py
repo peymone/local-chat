@@ -1,6 +1,7 @@
 import socket
 
 from interface import ui
+from security import security
 
 
 class Client:
@@ -37,10 +38,14 @@ class Client:
 
         try:  # Try to connect to the server and send first messages
             self.client_socket.connect((self.server_host, self.server_port))
-            self.client_socket.send(self.nick.encode())
+
+            # Public key exchange for encryption and send nickname
+            self.public_key = self.client_socket.recv(1024)
+            self.client_socket.send(security.getSerialized_publicKey())
+            self.client_socket.send(security.encrypt(self.nick, self.public_key))
+
             print('\n')
-            ui.show(
-                f"Сlient successfully connected to the server on {self.server_host}:{self.server_port}")
+            ui.show(f"Сlient successfully connected to the server on {self.server_host}:{self.server_port}")
 
             # Start message receiving loop
             self.isActive = True
@@ -64,7 +69,9 @@ class Client:
     def send(self, message: str) -> None:
         """Send message to the server"""
 
-        self.client_socket.send(message.encode())
+        # Encrypt and send message
+        decrypted_msg = security.encrypt(message, self.public_key)
+        self.client_socket.send(decrypted_msg)
 
     def __receive(self):
         """Recieve messages from the server"""
@@ -72,15 +79,14 @@ class Client:
         # Receive messages from the server while the connection is established
         while self.isActive:
             try:
-                message = self.client_socket.recv(1024).decode()
+                message = security.decrypt(self.client_socket.recv(1024))
 
                 # Message processing
                 match message:
                     case self.BANNED_MSG:
-                        unban_date = self.client_socket.recv(1024).decode()
+                        unban_date = security.decrypt(self.client_socket.recv(1024))
                         self.stop()
-                        ui.show(
-                            f"You was ban by admin until {unban_date}", style='ban')
+                        ui.show(f"You was ban by admin until {unban_date}", style='ban')
                     case self.CLOSE_MSG:
                         self.stop()
                         ui.show("Server was stopped or break connection")
