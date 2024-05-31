@@ -1,10 +1,18 @@
 import logging
 
+from os import mkdir
+
 
 class Logger:
     def __init__(self) -> None:
         self.log_message = '%(asctime)s\t%(levelname)s\t%(message)s'
         self.tFormat = '%d-%m-%Y %H:%M:%S'
+
+        # Create data folder if not exist
+        try:
+            mkdir('data')
+        except FileExistsError:
+            pass
 
     def _create_infoLogger(self):
         """Logger for info messages"""
